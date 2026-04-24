@@ -130,7 +130,7 @@ final class BannerPageVC: UIViewController {
         }
 
         // 2️⃣ Kalau tidak ada → download dari API
-        let urlString = AppConfig.BASE_URL + "api/media/berita/" + fileName
+        let urlString = AppConfig2.BASE_URL + "api/media/berita/" + fileName
         print("🌐 [BANNER] Downloading from: \(urlString)")
         
         guard let url = URL(string: urlString) else {

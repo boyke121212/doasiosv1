@@ -10,7 +10,7 @@ import UIKit
 
 final class AuthManager {
 
-    private let baseURL = AppConfig.BASE_URL
+    private let baseURL = AppConfig2.BASE_URL
     private let securePrefs = SecurePrefs.shared
     private let purnomo: String
 
@@ -423,13 +423,13 @@ final class AuthManager {
         
         print("🔄 [AUTHMANAGER] Refresh Token: \(refreshToken.prefix(20))...")
 
-        guard let url = URL(string: baseURL + AppConfig.refresh) else {
+        guard let url = URL(string: baseURL + AppConfig2.refresh) else {
             print("❌ [AUTHMANAGER] Invalid refresh URL")
             onLogout("URL refresh tidak valid")
             return
         }
         
-        print("🔄 [AUTHMANAGER] Refresh URL: \(baseURL + AppConfig.refresh)")
+        print("🔄 [AUTHMANAGER] Refresh URL: \(baseURL + AppConfig2.refresh)")
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
