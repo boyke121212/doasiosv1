@@ -261,11 +261,8 @@ final class AuthManager {
         
         print("🌐 [AUTHMANAGER] Request task started")
     }
-
-    // ======================================================
-    // UPLOAD FOTO (PORT DARI uploadMultipartAuth)
-    // ======================================================
-
+    
+    
     func uploadFoto(
         files: [URL]?,
         params: [String: String],
@@ -274,9 +271,6 @@ final class AuthManager {
         onLogout: @escaping (String) -> Void,
         onLoading: @escaping (Bool) -> Void
     ) {
-        print("📤 [AUTHMANAGER] uploadFoto() called")
-        print("📤 [AUTHMANAGER] Files count: \(files?.count ?? 0)")
-        print("📤 [AUTHMANAGER] Params: \(params)")
 
         if !Auto.isInternetAvailable() {
             onLoading(false)
@@ -286,6 +280,8 @@ final class AuthManager {
 
         guard let accessToken = securePrefs.getAccessToken(),
               !accessToken.isEmpty else {
+
+            //onLogout("Sesi tidak valid")
             self.forceLogout(message: "Sesi Tidak Valid")
             return
         }
@@ -303,7 +299,6 @@ final class AuthManager {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.timeoutInterval = 30
 
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -315,13 +310,18 @@ final class AuthManager {
         var body = Data()
 
         for (key, value) in params {
+
             body.append("--\(boundary)\r\n".data(using: .utf8)!)
             body.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".data(using: .utf8)!)
             body.append("\(value)\r\n".data(using: .utf8)!)
         }
 
         realFiles?.enumerated().forEach { index, fileURL in
-            guard let fileData = try? Data(contentsOf: fileURL) else { return }
+
+            guard let fileData = try? Data(contentsOf: fileURL) else {
+                print("❌ [AUTHMANAGER] Failed to read file at: \(fileURL.path)")
+                return
+            }
 
             let mime: String
 
@@ -332,10 +332,14 @@ final class AuthManager {
             } else {
                 mime = "image/jpeg"
             }
+            
+            // CHANGED: Use "foto" instead of "foto1" 
+            let fieldName = "foto"
+            print("📤 [AUTHMANAGER] Attaching file[\(index)]: \(fieldName) = \(fileURL.lastPathComponent), size: \(fileData.count) bytes, mime: \(mime)")
 
             body.append("--\(boundary)\r\n".data(using: .utf8)!)
             body.append(
-                "Content-Disposition: form-data; name=\"foto\(index + 1)\"; filename=\"\(fileURL.lastPathComponent)\"\r\n"
+                "Content-Disposition: form-data; name=\"\(fieldName)\"; filename=\"\(fileURL.lastPathComponent)\"\r\n"
                     .data(using: .utf8)!
             )
             body.append("Content-Type: \(mime)\r\n\r\n".data(using: .utf8)!)
@@ -344,17 +348,16 @@ final class AuthManager {
         }
 
         body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
         request.httpBody = body
-        
-        print("📤 [AUTHMANAGER] Sending multipart upload...")
 
         URLSession.shared.dataTask(with: request) { data, response, error in
 
             DispatchQueue.main.async {
+
                 onLoading(false)
 
                 if let error = error {
-                    print("❌ [AUTHMANAGER] Upload error: \(error.localizedDescription)")
                     onError(error.localizedDescription)
                     return
                 }
@@ -363,12 +366,11 @@ final class AuthManager {
                     onError("Response tidak valid")
                     return
                 }
-                
-                print("📤 [AUTHMANAGER] Upload response status: \(http.statusCode)")
 
                 if http.statusCode == 401 {
-                    print("🔐 [AUTHMANAGER] Upload got 401, refreshing token...")
+
                     self.refreshTokenSafe(
+
                         onSuccess: {
                             self.uploadFoto(
                                 files: files,
@@ -379,20 +381,34 @@ final class AuthManager {
                                 onLoading: onLoading
                             )
                         },
+
                         onLogout: { message in
                             onLogout(message)
                         }
                     )
+
                     return
                 }
 
-                guard let data = data,
-                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                guard let data = data else {
+                    print("❌ [AUTHMANAGER] No data in upload response")
+                    onError("Response kosong")
+                    return
+                }
+                
+                // ALWAYS print raw response for debugging
+                if let rawResponse = String(data: data, encoding: .utf8) {
+                    print("📤 [AUTHMANAGER] Raw upload response: \(rawResponse)")
+                }
+                
+                guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    print("❌ [AUTHMANAGER] Failed to parse JSON from upload response")
                     onError("Response server tidak valid")
                     return
                 }
+                
+                print("✅ [AUTHMANAGER] Upload response JSON: \(json)")
 
-                // Cleanup temp files
                 realFiles?.forEach { file in
                     try? FileManager.default.removeItem(at: file)
                 }
@@ -403,6 +419,159 @@ final class AuthManager {
 
         }.resume()
     }
+
+//    // ======================================================
+//    // UPLOAD FOTO (PORT DARI uploadMultipartAuth)
+//    // ======================================================
+//    func uploadFoto(
+//        files: [URL]?,
+//        params: [String: String],
+//        onSuccess: @escaping ([String: Any]) -> Void,
+//        onError: @escaping (String) -> Void,
+//        onLogout: @escaping (String) -> Void,
+//        onLoading: @escaping (Bool) -> Void
+//    ) {
+//
+//        print("📤 [AUTHMANAGER] uploadFoto() called")
+//
+//        if !Auto.isInternetAvailable() {
+//            onLoading(false)
+//            onLogout("Tidak ada koneksi internet")
+//            return
+//        }
+//
+//        guard let accessToken = securePrefs.getAccessToken(),
+//              !accessToken.isEmpty else {
+//            self.forceLogout(message: "Sesi Tidak Valid")
+//            return
+//        }
+//
+//        guard let url = URL(string: baseURL + purnomo) else {
+//            onError("URL tidak valid")
+//            return
+//        }
+//
+//        onLoading(true)
+//
+//        let boundary = "Boundary-\(UUID().uuidString)"
+//
+//        var request = URLRequest(url: url)
+//        request.httpMethod = "POST"
+//        request.timeoutInterval = 60
+//
+//        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+//        request.setValue("application/json", forHTTPHeaderField: "Accept")
+//        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+//        request.setValue(DeviceSecurityHelper.getDeviceHash(), forHTTPHeaderField: "X-Device-Hash")
+//        request.setValue(DeviceSecurityHelper.getAppSignatureHash(), forHTTPHeaderField: "X-App-Signature")
+//        request.setValue("ios", forHTTPHeaderField: "Platform")
+//
+//        // MARK: - BUILD BODY (still Data, tapi sudah lebih aman)
+//        var body = Data()
+//
+//        // Params
+//        for (key, value) in params {
+//            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+//            body.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".data(using: .utf8)!)
+//            body.append("\(value)\r\n".data(using: .utf8)!)
+//        }
+//
+//        // Files
+//        files?.enumerated().forEach { index, fileURL in
+//            guard let fileData = try? Data(contentsOf: fileURL) else { return }
+//
+//            let mime: String
+//            let lower = fileURL.path.lowercased()
+//
+//            if lower.hasSuffix(".png") {
+//                mime = "image/png"
+//            } else if lower.hasSuffix(".webp") {
+//                mime = "image/webp"
+//            } else {
+//                mime = "image/jpeg"
+//            }
+//
+//            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+//            body.append(
+//                "Content-Disposition: form-data; name=\"foto\(index + 1)\"; filename=\"\(fileURL.lastPathComponent)\"\r\n"
+//                    .data(using: .utf8)!
+//            )
+//            body.append("Content-Type: \(mime)\r\n\r\n".data(using: .utf8)!)
+//            body.append(fileData)
+//            body.append("\r\n".data(using: .utf8)!)
+//        }
+//
+//        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+//
+//        // MARK: - IMPORTANT FIX (ANTI 413 / STABILITY)
+//        request.httpBody = body
+//        request.setValue("\(body.count)", forHTTPHeaderField: "Content-Length")
+//
+//        print("📤 [AUTHMANAGER] Body size: \(body.count) bytes")
+//
+//        // MARK: - REQUEST
+//        URLSession.shared.dataTask(with: request) { data, response, error in
+//
+//            DispatchQueue.main.async {
+//                onLoading(false)
+//
+//                if let error = error {
+//                    print("❌ Network error: \(error)")
+//                    onError(error.localizedDescription)
+//                    return
+//                }
+//
+//                guard let http = response as? HTTPURLResponse else {
+//                    onError("Response tidak valid")
+//                    return
+//                }
+//
+//                print("📤 Status Code: \(http.statusCode)")
+//
+//                // 401 refresh token
+//                if http.statusCode == 401 {
+//                    self.refreshTokenSafe(
+//                        onSuccess: {
+//                            self.uploadFoto(
+//                                files: files,
+//                                params: params,
+//                                onSuccess: onSuccess,
+//                                onError: onError,
+//                                onLogout: onLogout,
+//                                onLoading: onLoading
+//                            )
+//                        },
+//                        onLogout: onLogout
+//                    )
+//                    return
+//                }
+//
+//                guard let data = data else {
+//                    onError("Response kosong")
+//                    return
+//                }
+//
+//                print("📤 Response size: \(data.count) bytes")
+//
+//                guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+//                    let raw = String(data: data, encoding: .utf8) ?? "-"
+//                    print("❌ Raw response: \(raw)")
+//                    onError("Response server tidak valid")
+//                    return
+//                }
+//
+//                print("✅ SUCCESS:", json)
+//
+//                // cleanup
+//                files?.forEach {
+//                    try? FileManager.default.removeItem(at: $0)
+//                }
+//
+//                onSuccess(json)
+//            }
+//
+//        }.resume()
+//    }
 
     // ======================================================
     // REFRESH TOKEN

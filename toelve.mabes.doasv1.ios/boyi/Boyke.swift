@@ -14,6 +14,8 @@ class Boyke: UIViewController {
     // MARK: - Properties
     private var loadingView: UIView?
     private var activityIndicator: UIActivityIndicatorView?
+    private var captureLoadingView: UIView?
+    private var captureIndicator: UIActivityIndicatorView?
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -111,6 +113,81 @@ class Boyke: UIViewController {
         }
     }
     
+    // MARK: - Capture Loading
+
+    func showCaptureLoading() {
+
+        if captureLoadingView == nil {
+
+            let overlay = UIView()
+            overlay.backgroundColor = UIColor.black.withAlphaComponent(0.45)
+            overlay.translatesAutoresizingMaskIntoConstraints = false
+
+            let container = UIView()
+            container.backgroundColor = UIColor.black.withAlphaComponent(0.75)
+            container.layer.cornerRadius = 16
+            container.translatesAutoresizingMaskIntoConstraints = false
+
+            let indicator = UIActivityIndicatorView(style: .large)
+            indicator.color = .white
+            indicator.translatesAutoresizingMaskIntoConstraints = false
+
+            let label = UILabel()
+            label.text = "Memproses Foto..."
+            label.textColor = .white
+            label.font = .systemFont(ofSize: 14, weight: .medium)
+            label.translatesAutoresizingMaskIntoConstraints = false
+
+            container.addSubview(indicator)
+            container.addSubview(label)
+            overlay.addSubview(container)
+
+            NSLayoutConstraint.activate([
+
+                container.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
+                container.centerYAnchor.constraint(equalTo: overlay.centerYAnchor),
+                container.widthAnchor.constraint(equalToConstant: 180),
+                container.heightAnchor.constraint(equalToConstant: 140),
+
+                indicator.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+                indicator.topAnchor.constraint(equalTo: container.topAnchor, constant: 28),
+
+                label.topAnchor.constraint(equalTo: indicator.bottomAnchor, constant: 16),
+                label.centerXAnchor.constraint(equalTo: container.centerXAnchor)
+            ])
+
+            captureLoadingView = overlay
+            captureIndicator = indicator
+        }
+
+        guard let overlay = captureLoadingView else { return }
+
+        if let window = view.window {
+
+            if overlay.superview == nil {
+
+                window.addSubview(overlay)
+
+                NSLayoutConstraint.activate([
+                    overlay.topAnchor.constraint(equalTo: window.topAnchor),
+                    overlay.leadingAnchor.constraint(equalTo: window.leadingAnchor),
+                    overlay.trailingAnchor.constraint(equalTo: window.trailingAnchor),
+                    overlay.bottomAnchor.constraint(equalTo: window.bottomAnchor)
+                ])
+            }
+
+            overlay.isHidden = false
+            captureIndicator?.startAnimating()
+            view.isUserInteractionEnabled = false
+        }
+    }
+
+    func hideCaptureLoading() {
+
+        captureLoadingView?.isHidden = true
+        captureIndicator?.stopAnimating()
+        view.isUserInteractionEnabled = true
+    }
     /// Menampilkan loading dialog.
     /// Equivalent dengan showLoading() di Android.
     func showLoading() {

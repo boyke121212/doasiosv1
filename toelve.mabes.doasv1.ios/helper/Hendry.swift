@@ -265,10 +265,17 @@ extension Home {
     
     private func navigateToAbsenHadir() {
         print("🚀 [HENDRY] Navigating to AbsenHadir")
-        // TODO: Implement navigation to AbsenHadir view controller
-        // let absenHadirVC = AbsenHadir()
-        // navigationController?.pushViewController(absenHadirVC, animated: true)
-        showToast(message: "Navigate to AbsenHadir (TODO)")
+        
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first {
+            let absenHadirVC = AbsenHadir()
+            let navController = UINavigationController(rootViewController: absenHadirVC)
+            window.rootViewController = navController
+            window.makeKeyAndVisible()
+            
+            UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
+            print("✅ [HENDRY] Successfully navigated to AbsenHadir")
+        }
     }
     
     private func navigateToStatuses() {
@@ -281,8 +288,50 @@ extension Home {
     
     private func navigateToAbsen(type: AbsenType) {
         print("🚀 [HENDRY] Navigating to Absen type: \(type)")
-        // TODO: Implement navigation to appropriate absen view controller
-        showToast(message: "Navigate to Absen \(type.rawValue) (TODO)")
+        
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else {
+            print("❌ [HENDRY] Failed to get window")
+            return
+        }
+        
+        let viewController: UIViewController
+        
+        switch type {
+        case .bko:
+            viewController = AbsenBko()
+            print("✅ [HENDRY] Navigating to AbsenBko")
+            
+        case .dik:
+            viewController = AbsenDik()
+            print("✅ [HENDRY] Navigating to AbsenDIk")
+        case .dinas:
+            viewController = AbsenDinas()
+            print("✅ [HENDRY] Navigating to AbsenDinas")
+            
+        case .sakit:
+            viewController = AbsenSakit()
+            print("✅ [HENDRY] Navigating to AbsenSakit")
+            
+        case .cuti:
+            viewController = AbsenCuti()
+            print("✅ [HENDRY] Navigating to AbsenCuti")
+        case .ld:
+            viewController = AbsenLd()
+            print("✅ [HENDRY] Navigating to AbsenLd")
+        case .izin:
+            viewController = AbsenIzin()
+            print("✅ [HENDRY] Navigating to AbsenIzin")
+        
+        }
+        
+        // Navigate with UINavigationController
+        let navController = UINavigationController(rootViewController: viewController)
+        window.rootViewController = navController
+        window.makeKeyAndVisible()
+        
+        UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
+        print("✅ [HENDRY] Navigation to \(type.rawValue) complete")
     }
     
     /// Update berita pager with data

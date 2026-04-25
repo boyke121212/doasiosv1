@@ -137,55 +137,55 @@ final class Auto {
             DispatchQueue.main.async { imageView.image = img }
         }.resume()
     }
-//
-//    // MARK: - LOADING FOTO
-//    // Setara loadingFoto() di Auto.kt — URL: BASE_URL/api/media/absensi?file=yyyy/MM/dd/namafile
-//    static func loadingFoto(
-//        imageView: UIImageView,
-//        file: String,
-//        tanggal: String,
-//        from vc: UIViewController? = nil   // setara context di Kotlin untuk buka PreviewFotoActivity
-//    ) {
-//        guard !file.isEmpty, !tanggal.isEmpty else { return }
-//        guard let token = SecurePrefs.shared.getAccessToken() else { return }
-//
-//        let folderPath  = tanggal.replacingOccurrences(of: "-", with: "/")
-//        let fullPath    = "\(folderPath)/\(file)"
-//        let encodedPath = fullPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-//        let urlString   = AppConfig.BASE_URL + "api/media/absensi?file=" + encodedPath
-//
-//        guard let url = URL(string: urlString) else { return }
-//
-//        DispatchQueue.main.async { imageView.image = UIImage(named: "doas2") }
-//
-//        var request = URLRequest(url: url)
-//        request.setValue("Bearer \(token)",                          forHTTPHeaderField: "Authorization")
-//        request.setValue(DeviceSecurityHelper.getDeviceHash(),       forHTTPHeaderField: "X-Device-Hash")
-//        request.setValue(DeviceSecurityHelper.getAppSignatureHash(), forHTTPHeaderField: "X-App-Signature")
-//
-//        URLSession.shared.dataTask(with: request) { data, _, _ in
-//            guard let data = data, !data.isEmpty, let img = UIImage(data: data) else { return }
-//            DispatchQueue.main.async {
-//                imageView.image = img
-//                // Setara: img.setOnClickListener { startActivity(PreviewFotoActivity, foto_uri=url) }
-//                guard let vc = vc else { return }
-//                imageView.isUserInteractionEnabled = true
-//                imageView.gestureRecognizers?.removeAll()
-//                // UITapGestureRecognizer tidak support closure — pakai objc helper
-//                let handler = TapHandler(action: {
+
+    // MARK: - LOADING FOTO
+    // Setara loadingFoto() di Auto.kt — URL: BASE_URL/api/media/absensi?file=yyyy/MM/dd/namafile
+    static func loadingFoto(
+        imageView: UIImageView,
+        file: String,
+        tanggal: String,
+        from vc: UIViewController? = nil   // setara context di Kotlin untuk buka PreviewFotoActivity
+    ) {
+        guard !file.isEmpty, !tanggal.isEmpty else { return }
+        guard let token = SecurePrefs.shared.getAccessToken() else { return }
+
+        let folderPath  = tanggal.replacingOccurrences(of: "-", with: "/")
+        let fullPath    = "\(folderPath)/\(file)"
+        let encodedPath = fullPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        let urlString   = AppConfig2.BASE_URL + "api/media/absensi?file=" + encodedPath
+
+        guard let url = URL(string: urlString) else { return }
+
+        DispatchQueue.main.async { imageView.image = UIImage(named: "doas2") }
+
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)",                          forHTTPHeaderField: "Authorization")
+        request.setValue(DeviceSecurityHelper.getDeviceHash(),       forHTTPHeaderField: "X-Device-Hash")
+        request.setValue(DeviceSecurityHelper.getAppSignatureHash(), forHTTPHeaderField: "X-App-Signature")
+
+        URLSession.shared.dataTask(with: request) { data, _, _ in
+            guard let data = data, !data.isEmpty, let img = UIImage(data: data) else { return }
+            DispatchQueue.main.async {
+                imageView.image = img
+                // Setara: img.setOnClickListener { startActivity(PreviewFotoActivity, foto_uri=url) }
+                guard let vc = vc else { return }
+                imageView.isUserInteractionEnabled = true
+                imageView.gestureRecognizers?.removeAll()
+                // UITapGestureRecognizer tidak support closure — pakai objc helper
+                let handler = TapHandler(action: {
 //                    let preview = PreviewFotoActivity()
 //                    preview.fotoUri = urlString
 //                    preview.modalPresentationStyle = .fullScreen
 //                    vc.present(preview, animated: true)
-//                })
-//                let tap = UITapGestureRecognizer(target: handler, action: #selector(TapHandler.invoke))
-//                imageView.addGestureRecognizer(tap)
-//                // Simpan handler agar tidak di-deallocate
-//                objc_setAssociatedObject(imageView, &TapHandler.key, handler, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
-//            }
-//        }.resume()
-//    }
-//
+                })
+                let tap = UITapGestureRecognizer(target: handler, action: #selector(TapHandler.invoke))
+                imageView.addGestureRecognizer(tap)
+                // Simpan handler agar tidak di-deallocate
+                objc_setAssociatedObject(imageView, &TapHandler.key, handler, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+        }.resume()
+    }
+
 //    // MARK: - GET ADDRESS FROM LAT LNG
 //    static func getAddressFromLatLng(lat: Double, lon: Double, callback: @escaping (String) -> Void) {
 //        CLGeocoder().reverseGeocodeLocation(CLLocation(latitude: lat, longitude: lon)) { placemarks, _ in

@@ -9,5 +9,5 @@ import Foundation
 struct AppConfig2{
     static let BASE_URL = "https://doas-dittipidter.online/"
     static let refresh = "api/refresh-token"
-    //ksld
+    //knp sih
 }

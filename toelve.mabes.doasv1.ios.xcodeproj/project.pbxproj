@@ -21,6 +21,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				view/Untitled.swift,
 			);
 			target = 84D94DEA2F9ADF2000F450CA /* toelve.mabes.doasv1.ios */;
 		};

@@ -46,8 +46,31 @@ class Home: Boyke, UIScrollViewDelegate {
         setupUI()
         setupActions()
         setupDoubleBackExit()
+        btBerita.addTarget(self, action: #selector(ontapInfo), for: .touchUpInside)
+        btLog.addTarget(self, action: #selector(ontaplog), for: .touchUpInside)
+        btDoas.addTarget(self, action: #selector(tapdoas), for: .touchUpInside)
+        btStatus.addTarget(self, action: #selector(tapstatus), for: .touchUpInside)
+
+
+    }
+    @objc private func tapdoas() {
+        let beritaVC = Doas()
+        openPage(beritaVC)
+    }
+    @objc private func tapstatus() {
+        let beritaVC = Statuses()
+        openPage(beritaVC)
     }
     
+    @objc private func ontapInfo() {
+        let beritaVC = BeritaViewController()
+        openPage(beritaVC)
+    }
+    
+    @objc private func ontaplog() {
+        let HistoryVC = History()
+        openPage(HistoryVC)
+    }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         // Panggil fungsi dos() yang ada di Hendry.swift
@@ -252,8 +275,8 @@ class Home: Boyke, UIScrollViewDelegate {
         }
         
         btLog.addAction(UIAction(handler: { _ in
-            let historyVC = History() // Ganti ke class History kamu
-            self.navigationController?.pushViewController(historyVC, animated: true)
+           // let historyVC = History() // Ganti ke class History kamu
+            //self.navigationController?.pushViewController(historyVC, animated: true)
         }), for: .touchUpInside)
     }
     
